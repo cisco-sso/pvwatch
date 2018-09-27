@@ -1,0 +1,77 @@
+kind: List
+apiVersion: v1
+items:
+- kind: Namespace
+  apiVersion: v1
+  metadata:
+    name: pvwatch
+- kind: ServiceAccount
+  apiVersion: v1
+  metadata:
+    name: pvwatch
+    namespace: pvwatch
+- kind: ClusterRole
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: pvwatch
+  rules:
+  - apiGroups:
+    - events.k8s.io
+    resources:
+    - events
+    verbs:
+    - list
+    - watch
+    - get
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    verbs:
+    - list
+    - watch
+    - get
+    - delete
+- kind: ClusterRoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: pvwatch
+    namespace: pvwatch
+  subjects:
+  - kind: ServiceAccount
+    name: pvwatch
+    namespace: pvwatch
+  roleRef:
+    kind: ClusterRole
+    name: pvwatch
+    apiGroup: rbac.authorization.k8s.io
+- kind: Deployment
+  apiVersion: extensions/v1beta1
+  metadata:
+    labels:
+      run: pvwatch
+    name: pvwatch
+    namespace: pvwatch
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        run: pvwatch
+    template:
+      metadata:
+        annotations:
+          prometheus.io/port: "9500"
+          prometheus.io/scrape: "true"
+        labels:
+          run: pvwatch
+      spec:
+        serviceAccountName: pvwatch
+        containers:
+        - image: containers.cisco.com/sopdsre/pvwatch
+          imagePullPolicy: Always
+          name: pvwatch
+          ports:
+          - containerPort: 9500
+            name: metrics
+            protocol: TCP
+        restartPolicy: Always
