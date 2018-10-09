@@ -130,7 +130,7 @@ func (c *Controller) deletePod(eventCacheKey string) error {
 	event, err := c.eventLister.Events(namespace).Get(name)
 	if err != nil {
 		pCount(eventCacheKey, eventNotFound, "", "", err)
-		glog.Infof("Event %s/%s not found", event.Namespace, event.Name)
+		glog.Infof("Event %s/%s not found", namespace, name)
 		return nil
 	}
 	if !devicePathRe.MatchString(event.Note) {
